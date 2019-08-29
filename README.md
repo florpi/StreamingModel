@@ -10,7 +10,7 @@ The peculiar motion of galaxies on an expanding background make the translation 
 In the following figure, we show the pairwise velocity distribution measured on N-body simulations for different pair separations. The PDF is highly  non-Gaussian, it shows both skewness and heavy tails
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/velocity_distributions.png" width = "900" height="500">
+<img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/velocity_distributions.png" width = "700" height="400">
 </p>
 
 ## The Gaussian Streaming Model 
@@ -21,7 +21,7 @@ These models can reproduce the monopole and quadrupole up to scales of about 30 
 We can Taylor expand the integral over the pairwise velocity distribution up to second order, which can in turn be written as an expansion in terms of its first two moments, the mean m1 and the dispersion m2,
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/gaussian_expansion.png" width = "900" height="700">
+<img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/gaussian_expansion.png" width = "700" height="700">
 </p>
 
 
@@ -33,7 +33,7 @@ On small scales, where statistical errors are the smallest, the accuracy of the 
 The Skewed Student-t (ST) [4] distribution has exactly these properties. We find its parameters by matching its first four momentsto the ones measured in the simulation. These are the resulting multipoles in redshift space,
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/model_multipoles.png" width = "900" height="1000">
+<img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/model_multipoles.png" width = "700" height="800">
 </p>
 
 
