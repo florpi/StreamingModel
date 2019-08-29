@@ -6,9 +6,11 @@ The peculiar motion of galaxies on an expanding background make the translation 
 
 ![alt text](https://raw.githubusercontent.com/florpi/streamingmodel/master/images/streaming_model.png)
 
+
 In the following figure, we show the pairwise velocity distribution measured on N-body simulations for different pair separations. The PDF is highly  non-Gaussian, it shows both skewness and heavy tails
 
 ![alt text](https://raw.githubusercontent.com/florpi/streamingmodel/master/images/velocity_distributions.png)
+< img src="https://raw.githubusercontent.com/florpi/streamingmodel/master/images/velocity_distributions.png" width = "100" height="100">
 
 ## The Gaussian Streaming Model 
 State-of-the-art models approximate the pairwise velocity distribution by a Gaussian [2], [3].
