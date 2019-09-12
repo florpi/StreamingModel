@@ -48,7 +48,7 @@ def read_simulation(hdf5_filename, pos_field, vel_field, mass_field,
 
 	return pos[mass_mask, :], vel[mass_mask, :]
 
-def save_tpcfs(r, s, mu, pos, vel, los_direction, cosmology, boxsize, saveto):
+def save_tpcfs(r, s, mu, pos, vel, los_direction, cosmology, boxsize, saveto, n_wedges = 3):
 
 
 	print('Computing real space correlation function...')
@@ -68,8 +68,22 @@ def save_tpcfs(r, s, mu, pos, vel, los_direction, cosmology, boxsize, saveto):
 	hexadecapole= tpcf_multipole(tpcf_s_mu, mu, order = 4)
 	print('Done!')
 
+	# wedges for mu
+
+	n_mu_bins_per_wedge = 50
+
+	mu_wedges = np.concatenate(
+			[np.linspace(i * (1./n_wedges), (i+1) * 1./n_wedges - 0.001, n_mu_bins_per_wedge) for i in range(n_wedges)],
+			)
+
+
+	mu_wedges[-1] = 1.
+
 	print('Computing wedges...')
-	wedges = tpcf_tools.tpcf_wedges(tpcf_s_mu, mu)
+	tpcf_s_mu_wedges = tpcf_tools.compute_tpcf_s_mu(s, mu_wedges, pos, vel, los_direction,
+			cosmology, boxsize)
+
+	wedges = tpcf_tools.tpcf_wedges(tpcf_s_mu_wedges, mu_wedges, n_wedges = n_wedges)
 	print('Done!')
 
 
@@ -79,6 +93,8 @@ def save_tpcfs(r, s, mu, pos, vel, los_direction, cosmology, boxsize, saveto):
 						'r': r,
 						},
 				'redsfhit': {
+						's': s,
+						'mu': mu,
 						'tpcf_s_mu': tpcf_s_mu,
 						'monopole': monopole,
 						'quadrupole': quadrupole,
@@ -89,7 +105,7 @@ def save_tpcfs(r, s, mu, pos, vel, los_direction, cosmology, boxsize, saveto):
 
 
 	with open(saveto + '.pickle', 'wb') as fp:
-		pickle.dump(tpcf_dict, protocol = pickle.HIGHEST_PROTOCOL)
+		pickle.dump(tpcf_dict, fp, protocol = pickle.HIGHEST_PROTOCOL)
 
 
 
@@ -109,7 +125,7 @@ if __name__=='__main__':
 	mu = np.sort( 1. - np.geomspace(0.0001, 1., n_mu_bins))
 
 	s = np.arange(0., 50., 1.)
-	s[0] = 0.001
+	s[0] = 0.0001
 
 
 	pos, vel = read_simulation(hdf5_filename, 'GroupPos', 'GroupVel', 'GroupMass',
