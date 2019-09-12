@@ -1,0 +1,6 @@
+
+
+def joke():
+
+	return 'holi'
+	
