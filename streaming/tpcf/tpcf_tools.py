@@ -1,4 +1,4 @@
-from halotools.mock_observables import tpcf, s_mu_tpcf, tpcf_multipole
+from halotools.mock_observables import tpcf, s_mu_tpcf 
 import numpy as np
 
 

@@ -43,6 +43,7 @@ def integrand_s_mu(s_c, mu_c, twopcf_function, los_pdf_function):
 		vlos = (s_parallel - y) * np.sign(y)
 
 		r = np.sqrt(s_perp**2 + y **2)
+		
 
 		return los_pdf_function( vlos, s_perp, np.abs(y)) * (1 + twopcf_function(r))
 

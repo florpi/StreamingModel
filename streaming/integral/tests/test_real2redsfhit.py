@@ -15,7 +15,7 @@ def tpcf_function(r):
 def test_simps_integrate_tpcf():
 
 	s = np.linspace(0., 20, 10)
-	mu = np.linspace(0.,1., 2)
+	mu = np.linspace(0.,1., 5)
 
 	result = simps_integrate(s, mu, tpcf_function, los_pdf, epsilon = 1.e-6, n = 1200)
 
@@ -30,7 +30,7 @@ def test_simps_integrate_tpcf():
 
 	s_perp = s_perp.reshape(-1, 1)
 
-	analytical_result = np.exp(-s_perp**2) * 4. * 1.77245 - 1.
+	analytical_result = (np.exp(-s_perp**2) * 4. * 1.77245 - 1.).reshape(result.shape)
 
 	np.testing.assert_almost_equal(result, analytical_result, decimal = 4)
 
