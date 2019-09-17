@@ -57,7 +57,6 @@ def interpolate_parameters(sim_measurement, st_parameters):
 				interp2d(sim_measurement.r_parallel, sim_measurement.r_perpendicular,
 					st_parameters[..., parameter], kind = 'linear') 
 				)
-	print(len(interpolators))
 
 	return interpolators
 				
