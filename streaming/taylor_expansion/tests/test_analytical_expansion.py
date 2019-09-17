@@ -1,4 +1,5 @@
-from streaming.taylor_expansion.taylor_expansion import TaylorExpansion, AnalyticalTaylorExpansion
+from streaming.taylor_expansion.taylor_expansion import TaylorExpansion 
+from streaming.taylor_expansion.analytical_expansion import AnalyticalTaylorExpansion
 import numpy as np
 import pandas as pd
 import pytest

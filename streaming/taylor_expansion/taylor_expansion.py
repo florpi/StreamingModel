@@ -149,7 +149,7 @@ class TaylorExpansion:
 					cutoff_f = cutoff_tpcf)
 			counter_order += 1
 
-		self.mono, self.quad, self.hexa = multipoles(self.mu, self.tpcf_s)
+		self.monopole, self.quadrupole, self.hexadecapole = multipoles(self.mu, self.tpcf_s)
 
 
 	def tpcf_real(self, s_parallel, s_perpendicular):
@@ -286,92 +286,5 @@ class TaylorExpansion:
 			return self.central2origin(s_parallel, s_perpendicular, n)
 
 		return moment_about_origin 
-
-class AnalyticalTaylorExpansion:
-	'''
-
-	Perform a Taylor Expansion of the streaming model integral up to a given order
-
-	Args:
-		moments_df: Pandas data frame containing dictionaries for the different moments.
-		order: integer defining the order of the expansion.
-		cutoff_tpcf: integer defining the maximum order of the two point correlation function 
-		derivatives to include in the expansion.
-		color: color used for plotting.
-
-
-	'''
-	def __init__(self, s, moments_df, order): 
-
-		self.moments_df = moments_df
-
-		self.s = s
-		
-		self.s_c = 0.5 * (self.s[1:] + self.s[:-1])
-
-		# 0-th order term
-
-		self.mono, self.quad, self.hexa = self.multipoles(self.s_c, 0)
-
-		counter_order = 1
-
-		while counter_order <= order:
-
-			mono_order, quad_order, hexa_order = self.multipoles(self.s_c, order = counter_order)
-
-			self.mono += mono_order
-			self.quad += quad_order
-			self.hexa += hexa_order
-
-			counter_order += 1
-
-
-
-	def multipoles(self, s, order):
-
-		if order == 0:
-
-			monopole = self.moments_df['tpcf']['function'](s, *self.moments_df['tpcf']['popt'])
-			quadrupole = np.zeros_like(s)
-			hexadecapole = np.zeros_like(s)
-
-			return monopole, quadrupole, hexadecapole
-
-		elif order == 1:
-
-			b_term = - self.moments_df['d1_tpcf']['function'](s, *self.moments_df['tpcf']['popt']) * \
-					self.moments_df['m_10']['function'](s, *self.moments_df['m_10']['popt'])
-
-			
-			self.mono_b_term = 1./3. * b_term
-			self.quad_b_term = 2./3. * b_term
-			self.hexa_b_term = np.zeros_like(s)
-
-
-			c_term = -(1 + self.moments_df['tpcf']['function'](s, *self.moments_df['tpcf']['popt'])) * \
-					self.moments_df['m_10']['function'](s, *self.moments_df['m_10']['popt'])/s
-
-
-			self.mono_c_term = 2./3. * c_term
-			self.quad_c_term = -2./3. * c_term
-			self.hexa_c_term = np.zeros_like(s)
-
-			d_term =  -(1 + self.moments_df['tpcf']['function'](s, *self.moments_df['tpcf']['popt'])) * \
-					self.moments_df['d1_m_10']['function'](s, *self.moments_df['m_10']['popt'])
-
-
-			self.mono_d_term = 1./3. * d_term
-			self.quad_d_term = 2./3. * d_term
-			self.hexa_d_term = np.zeros_like(s)
-
-
-			monopole = self.mono_b_term + self.mono_c_term + self.mono_d_term
-			quadrupole = self.quad_b_term + self.quad_c_term + self.quad_d_term
-			hexadecapole = self.hexa_b_term + self.hexa_c_term + self.hexa_d_term
-
-			return monopole, quadrupole, hexadecapole
-
-
-
 
 
