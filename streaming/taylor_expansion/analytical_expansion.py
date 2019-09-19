@@ -2,7 +2,8 @@ import numpy as np
 from scipy.special import binom
 from sympy import Symbol, integrate
 
-#TODO: Write all terms using class, prepare output summary (order of magnitude in s?, mu dependence integrated)
+#TODO: Write all terms using class, prepare output summary 
+# (order by order of magnitude in s?, mu dependence integrated)
 class Term:
 
 	def __init__(self, s, function_term):
