@@ -188,4 +188,47 @@ def simps_integrate_pi_sigma(s_perp, s_parallel, twopcf_function, los_pdf_functi
 	return integral_left + integral_right - 1.
 
 
+def integrand_pi_sigma(s_perp_c, s_parallel_c, twopcf_function, los_pdf_function): 
+
+
+
+		def integrand(y):
+
+			r = np.sqrt(s_perp_c.reshape(-1, 1) **2 + y.reshape(1, -1) **2)
+
+			return los_pdf_function( (s_parallel_c.reshape(-1, 1) - y.reshape(1, -1)) * np.sign(y.reshape(1, -1))[:, np.newaxis,:],
+					s_perp_c[:, np.newaxis, np.newaxis], np.abs(y)) * (1 + twopcf_function(r)[:, np.newaxis, :])
+
+		return integrand
+
+
+def simps_integrate_pi_sigma(s_perp, s_parallel, twopcf_function, los_pdf_function, limit = 70., epsilon = 0.0001, n = 300,
+		r_parallel = None): 
+
+		s_perp_c = 0.5 * ( s_perp[1:] + s_perp[:-1] )
+		s_parallel_c = 0.5 * ( s_parallel[1:] + s_parallel[:-1] )
+
+
+		streaming_integrand = integrand_pi_sigma(s_perp_c, s_parallel_c, twopcf_function, los_pdf_function)
+
+		if r_parallel is not None:
+
+			r_test = r_parallel[r_parallel < 0.]
+			integral_left = simps(streaming_integrand(r_test), r_test, axis = -1).reshape((s_perp_c.shape[0], s_parallel_c.shape[0]))
+
+		
+			r_test = r_parallel[r_parallel > 0.]
+			integral_right = simps(streaming_integrand(r_test), r_test, axis = -1).reshape((s_perp_c.shape[0], s_parallel_c.shape[0]))
+
+
+		else:
+
+			r_test = np.linspace(-limit, -epsilon, n)
+			integral_left = simps(streaming_integrand(r_test), r_test, axis = -1).reshape((s_perp_c.shape[0], s_parallel_c.shape[0]))
+
+			r_test = np.linspace(epsilon, limit, n)
+			integral_right = simps(streaming_integrand(r_test), r_test, axis = -1).reshape((s_perp_c.shape[0], s_parallel_c.shape[0]))
+
+		return streaming_integrand, integral_left + integral_right - 1.
+
 
