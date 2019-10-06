@@ -37,7 +37,7 @@ def gradual_increase(simulation, key):
     
     def moment(r):
         value = getattr(simulation, key).mean(r)        
-        return value * (1. + 0.8/r)
+        return value * (1. + 0.1/r)
     
     return moment
 
@@ -46,7 +46,7 @@ def gradual_decrease(simulation, key):
        
     def moment(r):
         value = getattr(simulation, key).mean(r)        
-        return value * (1. - 0.8/r)
+        return value * (1. - 0.1/r)
     
     return moment
 
