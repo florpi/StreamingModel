@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from halotools.mock_observables import tpcf_multipole
 import math
+import pickle
 from scipy.special import binom
 
 
@@ -74,7 +75,7 @@ def derivative(f, a, n = 1, args = (), h = 1.e-2, cutoff_n = None):
 
 
 def derivative_product_rule( f, g, a,  n, args_f = (), args_g = (), 
-		cutoff_f = None, cutoff_g = None):
+		cutoff_f = None, cutoff_g = None, h_dict = None):
 	'''
 
 	Computes the n-th derivative of a product of two functions: f.g, evaluated at a.
@@ -94,9 +95,14 @@ def derivative_product_rule( f, g, a,  n, args_f = (), args_g = (),
 
 	'''
 
+	if h_dict is None:
+		h_dict = {f'd_{i}': 1.e-4 for i in range(0, 5)}
+	else:
+		h_dict['d_0'] = 10.
+
 	return np.sum(
 			[ binom(n, k)*derivative(f, a, n = (n - k), args = args_f, cutoff_n = cutoff_f) * \
-			derivative(g, a, n = k, args = args_g, cutoff_n = cutoff_g) for k in range(n + 1)],
+			derivative(g, a, n = k, args = args_g, cutoff_n = cutoff_g, h = h_dict[f'd_{k}']) for k in range(n + 1)],
 	axis = 0 
 	 )
 
@@ -139,14 +145,26 @@ class TaylorExpansion:
 
 		counter_order = 1
 
+		#with open('h_dict.pickle', 'rb') as f:
+		#	self.h_dict = pickle.load(f)
+
+		self.h_dict = None
+
+
 		while counter_order <= order:
 
 			moment_counter_order = self.select_moment(counter_order)
 
+			if self.h_dict is not None:
+				h_dict_counter_order = self.h_dict[f'c{counter_order}']
+			else:
+				h_dict_counter_order = self.h_dict
+
 			self.tpcf_s += (-1)**counter_order * 1./math.factorial(counter_order) * \
 					derivative_product_rule(self.one_plus_tpcf_real, moment_counter_order, self.s_parallel, counter_order, 
 					args_f = (self.s_perpendicular, ), args_g = (self.s_perpendicular, ), 
-					cutoff_f = cutoff_tpcf)
+					cutoff_f = cutoff_tpcf,
+					h_dict = h_dict_counter_order)
 			counter_order += 1
 
 		self.monopole, self.quadrupole, self.hexadecapole = multipoles(self.mu, self.tpcf_s)
