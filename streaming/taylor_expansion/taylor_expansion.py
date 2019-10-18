@@ -96,7 +96,7 @@ def derivative_product_rule( f, g, a,  n, args_f = (), args_g = (),
 	'''
 
 	if h_dict is None:
-		h_dict = {f'd_{i}': 1.e-4 for i in range(0, 5)}
+		h_dict = {f'd_{i}': 1.e-2 for i in range(0, 5)}
 	else:
 		h_dict['d_0'] = 10.
 

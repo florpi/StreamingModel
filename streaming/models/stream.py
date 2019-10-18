@@ -37,6 +37,9 @@ class Stream():
 		self.best_fit_moments = best_fit_moments
 
 		if model == 'measured':
+			if self.best_fit_moments is not None:
+					self.sim_measurement_best_fit = self.use_fitted_moments(self.best_fit_moments)
+
 			self.jointpdf_los = measured_los_pdf(self.sim_measurement)
 			self.label = 'N-body'
 
@@ -89,9 +92,12 @@ class Stream():
 
 
 
-	def multipoles(self, s: np.array, mu: np.array):
+	def multipoles(self, s: np.array, mu: np.array): 
 
-		self.s_mu = real2redshift.simps_integrate(s, mu, self.sim_measurement.tpcf.mean, self.jointpdf_los)
+		if self.best_fit_moments:
+			self.s_mu = real2redshift.simps_integrate(s, mu, self.sim_measurement_best_fit.tpcf.mean, self.jointpdf_los)
+		else:
+			self.s_mu = real2redshift.simps_integrate(s, mu, self.sim_measurement.tpcf.mean, self.jointpdf_los)
 
 		monopole = tpcf_multipole(self.s_mu, mu, order = 0)
 		quadrupole = tpcf_multipole(self.s_mu, mu, order = 2)
@@ -128,13 +134,17 @@ class Stream():
 			print(sim_measurement_best_fit.c_20.mean(sim_measurement_best_fit.r)[0])
 			print(sim_measurement_best_fit.c_02.mean(sim_measurement_best_fit.r)[0])
 		'''
+		if 'tpcf' in best_fit_moments.keys():
+			sim_measurement_best_fit.tpcf.mean = lambda r: best_fit_moments['tpcf']['function'](r,
+					*best_fit_moments['tpcf']['popt'])
 
-		sim_measurement_best_fit.m_10.mean = lambda r: best_fit_moments['m_10']['function'](r,
-				*best_fit_moments['m_10']['popt'])
-		sim_measurement_best_fit.c_20.mean = lambda r: best_fit_moments['c_20']['function'](r,
-				*best_fit_moments['c_20']['popt'])
-		sim_measurement_best_fit.c_02.mean = lambda r: best_fit_moments['c_02']['function'](r,
-				*best_fit_moments['c_02']['popt'])
+		if 'm_10' in best_fit_moments.keys():
+			sim_measurement_best_fit.m_10.mean = lambda r: best_fit_moments['m_10']['function'](r,
+					*best_fit_moments['m_10']['popt'])
+			sim_measurement_best_fit.c_20.mean = lambda r: best_fit_moments['c_20']['function'](r,
+					*best_fit_moments['c_20']['popt'])
+			sim_measurement_best_fit.c_02.mean = lambda r: best_fit_moments['c_02']['function'](r,
+					*best_fit_moments['c_02']['popt'])
 
 		if 'c_30' in best_fit_moments.keys():
 			sim_measurement_best_fit.c_30.mean = lambda r: best_fit_moments['c_30']['function'](r,

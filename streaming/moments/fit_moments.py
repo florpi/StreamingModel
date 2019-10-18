@@ -16,6 +16,11 @@ def m_10(r, a, b, c):
 
 	return -a * np.exp(-b * r) + c
 
+def d_m_10(r, a, b, c):
+
+	return a *b * np.exp(-b * r) 
+
+
 def c_20(r, a, b, c):
 
 	return - a *np.exp(-b * r) + c
