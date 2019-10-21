@@ -7,6 +7,52 @@ import matplotlib.font_manager
 import matplotlib as mpl
 mpl.style.use('~/StreamingModel/streaming/utils/mplstyle')
 
+def plot_taylor_expansion(toy_model, list_of_models, attribute, labels, legend = True):
+
+
+	fig, (ax1, ax2) = plt.subplots(nrows=2,sharex = True, squeeze = True,
+			       gridspec_kw = {'wspace':0, 'hspace':0.1, 'height_ratios':[4,1]})
+
+	measured_attribute	= getattr(toy_model, attribute)
+	ax1.plot(toy_model.s_c, 
+				toy_model.s_c **2* measured_attribute,
+				label = labels[0], color='black')
+
+
+	for i, model in enumerate(list_of_models):
+
+		ax1.plot(toy_model.s_c, toy_model.s_c**2 * getattr(model, attribute),
+				label = labels[i+1], color = model.color, linestyle = model.linestyle, alpha = model.alpha)
+
+		ax2.plot(toy_model.s_c, getattr(model, attribute) / measured_attribute,
+				color = model.color, linestyle = model.linestyle, alpha = model.alpha) 
+
+	ax1.set_ylim(np.min(toy_model.s_c**2 * measured_attribute)*(1 - np.sign(np.min(toy_model.s_c**2 * measured_attribute))* 0.2) , 
+		np.max(toy_model.s_c**2 * measured_attribute)*(1 + np.sign(np.max(toy_model.s_c**2 * measured_attribute))* 0.2 )) 
+
+	ax1.set_xlim(0.4, 49.1)
+
+	ax2.set_ylim(0.95,1.05)
+	ax2.fill_between(toy_model.s_c,0.99, 1.01, facecolor = 'yellow', alpha = 0.3)
+	ax2.axhline(y = 1., linestyle='-', color='gray', alpha = 0.3)
+
+	if legend:
+		ax1.legend(frameon = False)
+
+	if attribute == 'monopole':
+		l = 0
+
+	elif attribute == 'quadrupole':
+		l = 2
+
+	elif attribute == 'hexadecapole':
+		l = 4
+
+	ax1.set_ylabel(r'$s^2 \xi_{%d}(s)$'%l)
+
+	ax2.set_xlabel(r'$s \mathrm{[Mpc/h]}$')
+	ax2.set_ylabel(r'$\xi_%d/\xi_{%d, \mathrm{%s}}$'%(l,l,labels[0]))
+
 
 def plot_residuals_std(simulation_direct_measurement, list_of_models, attribute, colors, legend = True):
 
@@ -120,4 +166,5 @@ def jointplot(x, y, jointpdf, log=False):
 
 	axHistx.set_ylabel(r'$\mathcal{P}(v_r | r)$')
 	axHisty.set_xlabel(r'$\mathcal{P}(v_t |r)$')
+
 

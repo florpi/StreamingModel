@@ -7,10 +7,21 @@ import pickle
 
 class AnalyticalMoment():
 
-	def __init__(self, function, r_to_fit, moment_to_fit, p0 = None):
+	def __init__(self, function, r_to_fit, moment_to_fit, p0 = None, tpcf = False):
 
 		self.function = function
-		self.popt, self.pcov = curve_fit(function, r_to_fit, moment_to_fit, p0)
+		if tpcf:
+			self.popt, self.pcov = curve_fit(log_tpcf, r_to_fit, np.log(moment_to_fit), p0)
+		else:
+			self.popt, self.pcov = curve_fit(function, r_to_fit, moment_to_fit, p0)
+
+
+def tpcf(r, a, b):
+	return (r/a)**(-b)
+
+def log_tpcf(r, a, b):
+	return np.log(tpcf(r, a, b,))
+
 
 def m_10(r, a, b, c):
 
@@ -57,6 +68,10 @@ if __name__ == "__main__":
 
 	simulation = SimulationMeasurements(PDF_FILENAME, TPCF_FILENAME)
 
+	r_tpcf_threshold = (simulation.r_tpcf > 1) & (simulation.r_tpcf < 60)
+	tpcf_best_fit = AnalyticalMoment(tpcf, simulation.r_tpcf[r_tpcf_threshold], 
+			simulation.tpcf.mean(simulation.r_tpcf[r_tpcf_threshold]), tpcf = True)
+
 	m_10_best_fit = AnalyticalMoment(m_10, simulation.r[15:100], simulation.m_10.mean(simulation.r[15:100]))
 	c_20_best_fit = AnalyticalMoment(c_20, simulation.r[5:60], simulation.c_20.mean(simulation.r[5:60]),
 									p0 = (3., 0.01, 0))
@@ -69,6 +84,7 @@ if __name__ == "__main__":
 
 
 	best_fit_moments = {
+			'tpcf': {'function': tpcf, 'popt': tpcf_best_fit.popt},
 			'm_10': {'function': m_10, 'popt': m_10_best_fit.popt},
 			'c_20': {'function': c_20, 'popt': c_20_best_fit.popt},
 			'c_02': {'function': c_02, 'popt': c_02_best_fit.popt},
@@ -81,5 +97,6 @@ if __name__ == "__main__":
 
 	with open('best_fit_moments.pkl', 'wb') as f:
 		pickle.dump(best_fit_moments, f)
+
 
 
