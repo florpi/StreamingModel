@@ -196,11 +196,11 @@ class EFT():
 		beta_eft_sigma = 0.
 
 		s12_par_EFT = self.linear_growth**2*( self.s12file[:,1] + b1*self.s12file[:,2] + b2*self.s12file[:,3] + \
-				(b1**2)*self.s12file[:,4] + b1*b2*self.s12file[:,5] + b2**2*self.s12file[:,6] + \
+				(b1**2)*self.s12file[:,4] +  \
 				bs*self.s12file[:,7] + beta_eft_sigma*self.s12file[:,8]) /(1.+ self.get_tpcf(self.r, b1, b2, bs, alpha_eft))
 
-		s12_perp_EFT = self.linear_growth**2*0.5*( self.s12file[:,9] + b1*self.s12file[:,10] + b2*self.s12file[:,11] + \
-				(b1**2)*self.s12file[:,12] + b1*b2*self.s12file[:,13] + b2**2*self.s12file[:,14] + \
+		s12_perp_EFT = self.linear_growth**2*( self.s12file[:,9] + b1*self.s12file[:,10] + b2*self.s12file[:,11] + \
+				(b1**2)*self.s12file[:,12] + \
 				bs*self.s12file[:,15] + beta_eft_sigma*self.s12file[:,16]) /(1.+ self.get_tpcf(self.r, b1, b2, bs, alpha_eft))
 
 
