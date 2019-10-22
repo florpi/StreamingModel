@@ -5,9 +5,30 @@ import pickle
 
 
 
-class AnalyticalMoment():
+class FitMoments():
 
 	def __init__(self, function, r_to_fit, moment_to_fit, p0 = None, tpcf = False):
+
+	# ********** Real space two point correlation function **********************
+	def tpcf(self, r, a, b):
+		return (r/a)**(-b)
+
+	def d_tpcf(self, r, a, b):
+		return -b/r * (r/a)**(-b)
+
+	def self_log_tpcf(self, r, a, b):
+		return np.log(tpcf(r, a, b,))
+
+	# ********** 1st order pairwise velocity moments **********************
+	def m_10(self, r, a, b, c):
+
+		return -a * np.exp(-b * r) + c
+
+	def d_m_10(self, r, a, b, c):
+
+		return a *b * np.exp(-b * r) 
+
+	def fit(self, function, r_to_fit, moment_to_fit, p0 = None, tpcf = False):
 
 		self.function = function
 		if tpcf:
@@ -16,29 +37,32 @@ class AnalyticalMoment():
 			self.popt, self.pcov = curve_fit(function, r_to_fit, moment_to_fit, p0)
 
 
-def tpcf(r, a, b):
-	return (r/a)**(-b)
-
-def log_tpcf(r, a, b):
-	return np.log(tpcf(r, a, b,))
-
-
-def m_10(r, a, b, c):
-
-	return -a * np.exp(-b * r) + c
-
-def d_m_10(r, a, b, c):
-
-	return a *b * np.exp(-b * r) 
-
-
-def c_20(r, a, b, c):
+# ********** 2nd order pairwise velocity moments **********************
+def c_20(self, r, a, b, c):
 
 	return - a *np.exp(-b * r) + c
 
-def c_02(r, a, b, c):
+def c_02(self, r, a, b, c):
 
-	return a * r**c + b
+	return self.c_20(r, a, b, c) 
+
+def d_c_20(r, a, b, c):
+
+	return d_m_10(r, a, b, c)
+
+def d_c_02(r, a, b, c):
+
+	return d_c_20(r, a, b, c)
+
+def d2_c_20(r, a, b, c):
+
+	return -a*b**2*np.exp(-b*r)
+
+def d2_c_02(r, a, b, c):
+
+	return d2_c_20(r, a, b, c)
+
+
 
 def c_30(r, a, b,c):
 	
@@ -75,7 +99,8 @@ if __name__ == "__main__":
 	m_10_best_fit = AnalyticalMoment(m_10, simulation.r[15:100], simulation.m_10.mean(simulation.r[15:100]))
 	c_20_best_fit = AnalyticalMoment(c_20, simulation.r[5:60], simulation.c_20.mean(simulation.r[5:60]),
 									p0 = (3., 0.01, 0))
-	c_02_best_fit = AnalyticalMoment(c_02, simulation.r[5:60], simulation.c_02.mean(simulation.r[5:60]))
+	c_02_best_fit = AnalyticalMoment(c_02, simulation.r[5:60], simulation.c_02.mean(simulation.r[5:60]),
+									p0 = (3., 0.01, 0))
 	c_30_best_fit = AnalyticalMoment(c_30, simulation.r[5:60], simulation.c_30.mean(simulation.r[5:60]))
 	c_12_best_fit = AnalyticalMoment(c_12, simulation.r[5:60], simulation.c_12.mean(simulation.r[5:60]))
 	c_22_best_fit = AnalyticalMoment(c_22, simulation.r[5:60], simulation.c_22.mean(simulation.r[5:60]))
@@ -84,11 +109,11 @@ if __name__ == "__main__":
 
 
 	best_fit_moments = {
-			'tpcf': {'function': tpcf, 'popt': tpcf_best_fit.popt},
-			'm_10': {'function': m_10, 'popt': m_10_best_fit.popt},
-			'c_20': {'function': c_20, 'popt': c_20_best_fit.popt},
-			'c_02': {'function': c_02, 'popt': c_02_best_fit.popt},
-			'c_30': {'function': c_30, 'popt': c_30_best_fit.popt},
+			'tpcf': tpcf_best_fit.popt,
+			'm_10': m_10_best_fit.popt,
+			'c_20': c_20_best_fit.popt,
+			'c_02':  c_02_best_fit.popt,
+			'c_30': c_30_best_fit.popt,
 			'c_12': {'function': c_12, 'popt': c_12_best_fit.popt},
 			'c_22': {'function': c_22, 'popt': c_22_best_fit.popt},
 			'c_40': {'function': c_40, 'popt': c_40_best_fit.popt},

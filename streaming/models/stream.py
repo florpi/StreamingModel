@@ -1,14 +1,15 @@
 import numpy as np
+import copy
+from operator import attrgetter
 from halotools.mock_observables import tpcf_multipole
+
 from streaming.models.skewt.moments2pdf import moments2skewt
 from streaming.models.gaussian.moments2pdf import moments2gaussian
 from streaming.models.gaussian.bestfit_gaussian import bestfit_gaussian 
 from streaming.models.skewt.bestfit_skewt import bestfit_skewt 
 from streaming.models.measured.measured_pdf import measured_los_pdf 
 from streaming.integral import real2redshift
-import copy
-from operator import attrgetter
-
+from streaming.moments.fit import AnalyticalIngredients
 
 class Stream():
 
@@ -116,47 +117,14 @@ class Stream():
 
 	def use_fitted_moments(self,  best_fit_moments):
 
+
 		sim_measurement_best_fit = copy.deepcopy(self.sim_measurement)
 
-		'''
-		for key in best_fit_moments:
-			get_atr = attrgetter(f'{key}')
-			print('before')
-			print(sim_measurement_best_fit.m_10.mean(sim_measurement_best_fit.r)[0])
-			print(sim_measurement_best_fit.c_20.mean(sim_measurement_best_fit.r)[0])
-			print(sim_measurement_best_fit.c_02.mean(sim_measurement_best_fit.r)[0])
-	
-			mean =	lambda r: best_fit_moments[key]['function'](r, 
-					*best_fit_moments[key]['popt']) 
+		
+		analytical = AnalyticalIngredients(self.sim_measurement, best_fit_moments)
 
-			print('after')
-			print(sim_measurement_best_fit.m_10.mean(sim_measurement_best_fit.r)[0])
-			print(sim_measurement_best_fit.c_20.mean(sim_measurement_best_fit.r)[0])
-			print(sim_measurement_best_fit.c_02.mean(sim_measurement_best_fit.r)[0])
-		'''
-		if 'tpcf' in best_fit_moments.keys():
-			sim_measurement_best_fit.tpcf.mean = lambda r: best_fit_moments['tpcf']['function'](r,
-					*best_fit_moments['tpcf']['popt'])
-
-		if 'm_10' in best_fit_moments.keys():
-			sim_measurement_best_fit.m_10.mean = lambda r: best_fit_moments['m_10']['function'](r,
-					*best_fit_moments['m_10']['popt'])
-			sim_measurement_best_fit.c_20.mean = lambda r: best_fit_moments['c_20']['function'](r,
-					*best_fit_moments['c_20']['popt'])
-			sim_measurement_best_fit.c_02.mean = lambda r: best_fit_moments['c_02']['function'](r,
-					*best_fit_moments['c_02']['popt'])
-
-		if 'c_30' in best_fit_moments.keys():
-			sim_measurement_best_fit.c_30.mean = lambda r: best_fit_moments['c_30']['function'](r,
-				*best_fit_moments['c_30']['popt'])
-			sim_measurement_best_fit.c_12.mean = lambda r: best_fit_moments['c_12']['function'](r,
-				*best_fit_moments['c_12']['popt'])
-			sim_measurement_best_fit.c_22.mean = lambda r: best_fit_moments['c_22']['function'](r,
-				*best_fit_moments['c_22']['popt'])
-			sim_measurement_best_fit.c_40.mean = lambda r: best_fit_moments['c_40']['function'](r,
-				*best_fit_moments['c_40']['popt'])
-			sim_measurement_best_fit.c_04.mean = lambda r: best_fit_moments['c_04']['function'](r,
-				*best_fit_moments['c_04']['popt'])
+		for moment in best_fit_moments:
+			getattr(sim_measurement_best_fit, moment).mean = analytical.moment2best_fit[moment].eval
 
 		return sim_measurement_best_fit
 
