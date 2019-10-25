@@ -2,6 +2,7 @@ import numpy as np
 import sys
 sys.path.insert(0, '../../../CLEFT_GSM/config2pt/')
 from lesm import LSM
+from scipy.interpolate import interp1d
 
 
 class EFT():
@@ -14,6 +15,12 @@ class EFT():
 			data_path: str,
 			linear_pk_file: str,
 			linear_growth: float,
+			b1:float=None,
+			b2:float=None,
+			bs:float=None,
+			alpha_eft:float=None,
+			alpha_eft_v:float=None,
+			s_Fog:float=0.,
 			run: bool = False,
 			):
 		'''
@@ -29,16 +36,17 @@ class EFT():
 		self.linear_pk_file = linear_pk_file
 		self.linear_growth = linear_growth
 		# Free bias parameters
-		self.b1 = None 
-		self.b2 = None 
-		self.bs = None 
+		self.b1 = b1 
+		self.b2 = b2 
+		self.bs = bs 
 		# Free eft parameters
 		# Fit to 2pcf
-		self.alpha_eft = None
+		self.alpha_eft = alpha_eft 
 		# Fit mean velocity
-		self.alpha_eft_v = None
+		self.alpha_eft_v = alpha_eft_v 
 		# Fit std
-		self.beta_eft_sigma = None
+		self.beta_eft_sigma = 0. 
+		self.s_Fog = s_Fog
 
 		self.xifile = np.loadtxt(data_path + linear_pk_file + '.xiStuff')
 		self.v12file = np.loadtxt(data_path + linear_pk_file + '.vpStuff')
@@ -49,10 +57,24 @@ class EFT():
 		if run:
 			self.runCLEFT()
 
+		if (self.b1 is not None) and (self.b2 is not None) and (self.bs is not None):
+			self.tpcf = interp1d(self.r, self.get_tpcf(self.r, self.b1, self.b2, self.bs,self.alpha_eft),
+				bounds_error=False, fill_value=(-1., 0.))
+			self.m_10 = interp1d(self.r, self.get_v12(self.r, self.b1, self.b2, self.bs, self.alpha_eft, self.alpha_eft_v),
+				bounds_error=False, fill_value=(0., 0.))
+			c_20, c_02 = self.get_s12(self.b1, self.b2, self.bs, self.alpha_eft, self.alpha_eft_v, self.s_Fog)
+			self.c_20 = interp1d(self.r, c_20, 
+					bounds_error=False, fill_value=(c_20[0],c_20[-1]))
+			self.c_02 = interp1d(self.r, c_02,
+					bounds_error=False, fill_value=(c_02[0], c_02[-1]))
+	
+
 	def get_linear_tpcf(self):
 
 		return self.xifile[:,1]
 
+	def get_linear_v12(self):
+		return self.v12file[:,1]
 
 
 	def runCLEFT(self):
@@ -142,6 +164,7 @@ class EFT():
 
 
 	def get_v12(self,
+			r: np.array,
 			b1: float, 
 			b2: float,
 			bs: float,
@@ -161,13 +184,18 @@ class EFT():
 		Returns:
 
 		'''
+		r_min = np.min(r)
+		r_max = np.max(r)
+
+		r_range = (self.r >= r_min) & (self.r <= r_max)
+
 
 		alpha_eft_prime_v = 0
 
-		return self.linear_growth*( self.v12file[:,2] + b1*self.v12file[:,3] + b2*self.v12file[:,4] + \
+		return (self.linear_growth*( self.v12file[:,2] + b1*self.v12file[:,3] + b2*self.v12file[:,4] + \
 				(b1**2)*self.v12file[:,5] + b1*b2*self.v12file[:,6] + b2**2*self.v12file[:,7] + \
 				alpha_eft_v*self.v12file[:,8] + alpha_eft_prime_v*self.v12file[:,9] + bs*self.v12file[:,10] + \
-				bs*b1*self.v12file[:,11]) /(1.+ self.get_tpcf(self.r, b1, b2, bs, alpha_eft))
+				bs*b1*self.v12file[:,11]) /(1.+ self.get_tpcf(self.r, b1, b2, bs, alpha_eft)))[r_range]
 
 
 	def get_s12(self,
@@ -175,7 +203,8 @@ class EFT():
 				b2: float, 
 				bs: float,
 				alpha_eft: float,
-				alpha_eft_v: float):
+				alpha_eft_v: float,
+				s_Fog:float= 0.):
 		'''
 
 		Reads EFT results for mean pairwise velocity
@@ -204,7 +233,7 @@ class EFT():
 				bs*self.s12file[:,15] + beta_eft_sigma*self.s12file[:,16]) /(1.+ self.get_tpcf(self.r, b1, b2, bs, alpha_eft))
 
 
-		return s12_par_EFT, s12_perp_EFT
+		return s12_par_EFT + s_Fog, s12_perp_EFT + s_Fog
 
 
 

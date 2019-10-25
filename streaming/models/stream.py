@@ -13,14 +13,17 @@ from streaming.moments.fit import AnalyticalIngredients
 
 class Stream():
 
-	def __init__(self, sim_measurement: None, model: str, best_fit_moments: None =None, method:  str = 'moments'):
+	def __init__(self, sim_measurement: None, model: str, 
+			list_analytical_moments: None =None, 
+			perturbation_theory: str = False,
+			method:  str = 'moments'):
 		'''Initializes class for different streaming models.
 
 		Args: 
 			sim_measurement: instance of class Measured
 			model: string
 			either simulation, gaussian or skewt.
-			best_fit_moments: dict 
+			list_analytical_moments: dict 
 			dictionary containing the functional form and optimal parameters for the fitted
 			moments
 			method: either moments method or maximum_likelihood to estimate the model parameters
@@ -35,11 +38,11 @@ class Stream():
 		self.mu =  np.sort(1 - np.geomspace(0.0001, 1., 120))
 		self.mu_c = 0.5 * (self.mu[1:] + self.mu[:-1])
 
-		self.best_fit_moments = best_fit_moments
+		self.list_analytical_moments = list_analytical_moments
 
 		if model == 'measured':
-			if self.best_fit_moments is not None:
-					self.sim_measurement_best_fit = self.use_fitted_moments(self.best_fit_moments)
+			if self.list_analytical_moments is not None:
+					self.sim_measurement_best_fit = self.use_fitted_moments(perturbation_theory)
 
 			self.jointpdf_los = measured_los_pdf(self.sim_measurement)
 			self.label = 'N-body'
@@ -47,8 +50,8 @@ class Stream():
 		elif model	== 'gaussian':
 
 			if method == 'moments':
-				if self.best_fit_moments is not None:
-					self.sim_measurement_best_fit = self.use_fitted_moments(self.best_fit_moments)
+				if self.list_analytical_moments is not None:
+					self.sim_measurement_best_fit = self.use_fitted_moments(perturbation_theory)
 					self.jointpdf_los = moments2gaussian(self.sim_measurement_best_fit)
 				else:
 					self.jointpdf_los = moments2gaussian(self.sim_measurement)
@@ -64,8 +67,8 @@ class Stream():
 
 			if method == 'moments':
 
-				if self.best_fit_moments is not None:
-					self.sim_measurement_best_fit = self.use_fitted_moments(self.best_fit_moments)
+				if self.list_analytical_moments is not None:
+					self.sim_measurement_best_fit = self.use_fitted_moments(perturbation_theory)
 					self.jointpdf_los = moments2skewt(self.sim_measurement_best_fit)
 				else:
 					self.jointpdf_los = moments2skewt(self.sim_measurement)
@@ -86,16 +89,16 @@ class Stream():
 			r_parallel_measured = np.arange(-70.5,70.5,1.)
 			r_parallel_measured = np.sort(np.concatenate((r_parallel_measured, np.array([-0.0001, 0.0001]))))
 
-			self.integrand, self.pi_sigma = self.pi_sigma(self.s_c, self.s_c, n = 0, r_parallel = r_parallel_measured)
+			self.integrand, self.pi_sigma = self.pi_sigma(self.s, self.s, n = 0, r_parallel = r_parallel_measured)
 
 		else:
-			self.integrand, self.pi_sigma = self.pi_sigma(self.s_c, self.s_c, n = 300, r_parallel = None)
+			self.integrand, self.pi_sigma = self.pi_sigma(self.s, self.s, n = 300, r_parallel = None)
 
 
 
 	def multipoles(self, s: np.array, mu: np.array): 
 
-		if self.best_fit_moments:
+		if self.list_analytical_moments:
 			self.s_mu = real2redshift.simps_integrate(s, mu, self.sim_measurement_best_fit.tpcf.mean, self.jointpdf_los)
 		else:
 			self.s_mu = real2redshift.simps_integrate(s, mu, self.sim_measurement.tpcf.mean, self.jointpdf_los)
@@ -115,16 +118,20 @@ class Stream():
 		return integrand, tpcf_pi_sigma
 
 
-	def use_fitted_moments(self,  best_fit_moments):
+	def use_fitted_moments(self,  perturbation_theory):
 
 
 		sim_measurement_best_fit = copy.deepcopy(self.sim_measurement)
 
 		
-		analytical = AnalyticalIngredients(self.sim_measurement, best_fit_moments)
+		analytical = AnalyticalIngredients(self.sim_measurement, self.list_analytical_moments,
+				perturbation_theory = perturbation_theory)
 
-		for moment in best_fit_moments:
-			getattr(sim_measurement_best_fit, moment).mean = analytical.moment2best_fit[moment].eval
+		for moment in self.list_analytical_moments:
+			if not perturbation_theory:
+				getattr(sim_measurement_best_fit, moment).mean = analytical.analytical_moments_dict[moment].eval
+			else:
+				getattr(sim_measurement_best_fit, moment).mean = analytical.analytical_moments_dict[moment]
 
 		return sim_measurement_best_fit
 

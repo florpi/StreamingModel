@@ -57,7 +57,7 @@ class PerturbationTheory():
 			print(f'Found best fit alpha_eft parameter: alpha_eft = {self.eft.alpha_eft}')
 
 			self.eft.tpcf = self.eft.get_tpcf(self.eft.r, self.eft.b1, self.eft.b2, self.eft.bs, self.eft.alpha_eft)
-			self.eft.v12 = self.eft.get_v12(self.eft.b1, self.eft.b2, self.eft.bs, self.eft.alpha_eft, 0.)
+			self.eft.v12 = self.eft.get_v12(self.eft.r, self.eft.b1, self.eft.b2, self.eft.bs, self.eft.alpha_eft, 0.)
 			self.eft.s12_par, self.eft.s12_perp = self.eft.get_s12(self.eft.b1, self.eft.b2, self.eft.bs, self.eft.alpha_eft,
 					0.)
 

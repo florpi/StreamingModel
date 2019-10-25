@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.interpolate import interp1d
 
 class CLPT():
 	'''
@@ -9,6 +10,9 @@ class CLPT():
 	def __init__(self,
 			data_path: str,
 			linear_growth: float,
+			b1:float= None,
+			b2:float=None,
+			s_Fog:float=0.,
 			):
 		'''
 		Args:
@@ -18,8 +22,9 @@ class CLPT():
 
 		self.linear_growth = linear_growth
 		# Free bias parameters
-		self.b1 = None # 1st order lagrangian bias
-		self.b2 = None # 2nd order lagrangian bias
+		self.b1 = b1 # 1st order lagrangian bias
+		self.b2 = b2 # 2nd order lagrangian bias
+		self.s_Fog = s_Fog
 
 		self.xifile = np.loadtxt(data_path + 'xi.txt')
 		self.v12file = np.loadtxt(data_path + 'v12.txt')
@@ -27,6 +32,18 @@ class CLPT():
 		self.multipoles_file = np.loadtxt(data_path + 'xi_s.txt')
 
 		self.r = self.xifile[:,0]
+
+		if (self.b1 is not None) and (self.b2 is not None):
+			self.tpcf = interp1d(self.r, self.get_tpcf(self.r, self.b1, self.b2), 
+					bounds_error=False, fill_value=(-1., 0.))
+			self.m_10 = interp1d(self.r, self.get_v12(self.b1, self.b2),
+					bounds_error = False, fill_value=(0., 0.))
+			c_20, c_02 = self.get_s12(self.b1, self.b2, self.s_Fog)
+			self.c_20 = interp1d(self.r, c_20, 
+					bounds_error=False, fill_value=(c_20[0],c_20[-1]))
+			self.c_02 = interp1d(self.r, c_02,
+					bounds_error=False, fill_value=(c_02[0], c_02[-1]))
+			
 
 	def get_multipoles(self):
 
@@ -61,7 +78,7 @@ class CLPT():
 		return self.linear_growth*( self.v12file[:,2] + b1*self.v12file[:,3] + b2*self.v12file[:,4] + \
 				b1**2*self.v12file[:,5] + b1*b2*self.v12file[:,6] ) /(1.+ self.get_tpcf(self.r, b1, b2))   
 
-	def get_s12(self, b1, b2):
+	def get_s12(self, b1, b2, s_Fog):
 
 		s12_par  = self.linear_growth**2*( self.s12file[:,1] + b1*self.s12file[:,2] + \
 				b2*self.s12file[:,3] + b1**2*self.s12file[:,4] ) / (1.+ self.get_tpcf(self.r, b1,b2))  
@@ -69,7 +86,7 @@ class CLPT():
 		s12_perp = self.linear_growth**2*0.5*( self.s12file[:,5] + b1*self.s12file[:,6] +\
 				b2*self.s12file[:,7] + b1**2*self.s12file[:,8] ) / (1.+ self.get_tpcf(self.r, b1, b2))
 
-		return s12_par, s12_perp
+		return s12_par + s_Fog, s12_perp + s_Fog
 
 
 
